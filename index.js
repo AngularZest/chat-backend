@@ -1,38 +1,25 @@
-const express = require('express');
-const app = express();
-const http = require('http');
-const { disconnect } = require('process');
-const server = http.createServer(app);
-const {Server} = require("socket.io");
 
+const express = require('express')
+const app = express()
+const mongoose = require('mongoose')
+const bodyParser = require("body-parser");
+const USER = require('./models/user')
+app.use(express.json())
 
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
-});
+const { MONGO_URI } = require('./config');
+const PostRoutes = require('./routes/api/posts_controller')
 
-
-app.get('/', (req, res) => {
-  console.log("hello world")  
-  res.send("hello world")
-  });
-
-
-io.on('connection', (socket)=>{
-    console.log('a user connected');
-    socket.on('message',(msg)=>{
-        console.log('message : ' + msg);
-        io.emit('message', msg);
-    })
-
-    
-    socket.on('disconnect',()=>{
-    console.log('user disconnected')
-    })
+app.use(express.json())
+mongoose.connect(MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 })
+  .then(() => console.log('MongoDB connected!'))
+  .catch(err => console.log(err));
 
-server.listen(3000, () => {
-  console.log('listening on *:3000');
-}); 
+app.use('/api/post', PostRoutes)
+app.use('/api/get', PostRoutes)
+const PORT = process.env.PORT || 5000;
+
+
+app.listen(PORT, () => console.log(`Server running at port ${PORT}`));
